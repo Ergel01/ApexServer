@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApexServe IT - Enterprise IT Service Management</title>
+   
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .table-custom tbody tr {
+            background-color: transparent !important;
+            color: #f8f9fa !important;
+        }
+        .table-custom td {
+            background-color: transparent !important;
+            color: #f8f9fa !important;
+        }
+        .form-control, .form-select {
+            background-color: #0d1117 !important;
+            color: #f8f9fa !important;
+            border-color: #30363d !important;
+        }
+        .form-control::placeholder {
+            color: #8b949e !important;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: #0d1117 !important;
+            color: #ffffff !important;
+            border-color: #58a6ff !important;
+            box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25) !important;
+        }
+        .text-custom-muted {
+            color: #8b949e !important;
+        }
+        .comment-box {
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body class="bg-dark text-light">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary px-4 py-3">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
+                <i class="fa-solid fa-shield-halved text-primary"></i> 
+                <span>ApexServe <span class="text-primary">IT</span></span>
+                <span class="badge bg-secondary font-monospace fs-6 px-2 py-1 ms-2">V2.4 (DEMO MODE)</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-dark border border-secondary text-light px-3 py-2">
+                    <i class="fa-solid fa-user-shield text-success me-1"></i> Role: <strong>{{ role | upper }}</strong>
+                </span>
+                
+                {% if role == 'admin' %}
+                    <form action="{{ url_for('switch_role') }}" method="POST" class="d-inline">
+                        <input type="hidden" name="target_role" value="user">
+                        <button type="submit" class="btn btn-outline-light btn-sm">Switch to Employee Portal</button>
+                    </form>
+                {% else %}
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#adminModal">
+                        Switch to IT Agent Dashboard
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- ERROR ALERT -->
+    {% if error %}
+    <div class="container mt-3">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container-fluid">
+        <div class="row">
+           
+            <!-- SIDEBAR -->
+            <div class="col-md-2 p-3 sidebar d-none d-md-block">
+                <div class="text-uppercase text-custom-muted fw-bold mb-2 px-2" style="font-size: 0.75rem;">Agent Operations</div>
+                <ul class="nav flex-column mb-4">
+                    <li class="nav-item"><a class="nav-link active d-flex align-items-center gap-2 text-white" href="#"><i class="fa-solid fa-chart-pie"></i> Overview & Triage</a></li>
+                    <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2 text-light" href="#"><i class="fa-solid fa-ticket"></i> All Tickets Queue</a></li>
+                    <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2 text-light" href="#"><i class="fa-solid fa-chart-line"></i> Performance Analytics</a></li>
+                </ul>
+
+                <div class="text-uppercase text-custom-muted fw-bold mb-2 px-2" style="font-size: 0.75rem;">System Health</div>
+                <ul class="nav flex-column small text-light">
+                    <li class="px-2 py-1 d-flex justify-content-between"><span>Active Directory</span> <span class="text-success">99.9%</span></li>
+                    <li class="px-2 py-1 d-flex justify-content-between"><span>Mail Gateway</span> <span class="text-success">100%</span></li>
+                    <li class="px-2 py-1 d-flex justify-content-between"><span>VPN Gateway 2</span> <span class="text-warning">Degraded</span></li>
+                </ul>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="col-md-10 p-4">
+                
+                <!-- METRICS CARDS -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card card-custom p-3 bg-dark border-secondary text-light">
+                            <div class="text-light small text-uppercase fw-bold mb-1">Unassigned</div>
+                            <h3 class="fw-bold mb-0 text-white">1</h3>
+                            <small class="text-danger mt-2 d-block"><i class="fa-solid fa-circle-exclamation"></i> Needs Agent Allocation</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-custom p-3 bg-dark border-secondary text-light">
+                            <div class="text-light small text-uppercase fw-bold mb-1">In Progress</div>
+                            <h3 class="fw-bold mb-0 text-white">0</h3>
+                            <small class="text-warning mt-2 d-block"><i class="fa-solid fa-clock"></i> Active SLA Timers</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-custom p-3 bg-dark border-secondary text-light">
+                            <div class="text-light small text-uppercase fw-bold mb-1">Pending User</div>
+                            <h3 class="fw-bold mb-0 text-white">1</h3>
+                            <small class="text-info mt-2 d-block"><i class="fa-solid fa-comment-dots"></i> Awaiting Response</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-custom p-3 bg-dark border-secondary text-light">
+                            <div class="text-light small text-uppercase fw-bold mb-1">Resolved Today</div>
+                            <h3 class="fw-bold mb-0 text-white">2</h3>
+                            <small class="text-success mt-2 d-block"><i class="fa-solid fa-circle-check"></i> 94% CSAT Rate</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TICKET FORM -->
+                <div class="card card-custom p-4 mb-4 bg-dark border-secondary text-light">
+                    <h5 class="card-title mb-3 text-light"><i class="fa-solid fa-circle-plus text-primary"></i> Submit New IT Ticket</h5>
+                    <form method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="title" class="form-label small text-light fw-bold">Issue Title</label>
+                                <input type="text" class="form-control" id="title" name="title" placeholder="e.g., VPN Connection Dropping" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="category" class="form-label small text-light fw-bold">Category</label>
+                                <select class="form-select" id="category" name="category">
+                                    <option value="Hardware">Hardware</option>
+                                    <option value="Software">Software</option>
+                                    <option value="Network Access">Network Access</option>
+                                    <option value="Account/IAM">Account/IAM</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="priority" class="form-label small text-light fw-bold">Priority</label>
+                                <select class="form-select" id="priority" name="priority">
+                                    <option value="Low">Low</option>
+                                    <option value="Medium" selected>Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Critical">Critical</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="fa-solid fa-paper-plane me-1"></i> Create Incident</button>
+                            </div>
+                            <div class="col-12">
+                                <label for="description" class="form-label small text-light fw-bold">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="2" placeholder="Provide details about the issue..." required></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- TICKETS TABLE -->
+                <div class="card card-custom bg-dark border-secondary text-light">
+                    <div class="card-body p-0">
+                        <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1 text-light fw-bold">Support Ticket Queue</h5>
+                                <small class="text-custom-muted">Click any ticket action to inspect details or manage status</small>
+                            </div>
+                            <span class="badge bg-secondary border border-secondary">{{ tickets | length }} total tickets</span>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead class="table-dark text-uppercase small text-custom-muted border-bottom border-secondary">
+                                    <tr>
+                                        <th class="ps-3">Ticket ID</th>
+                                        <th>Subject & Description</th>
+                                        <th>Category</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th class="text-end pe-3">Actions / Management</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if tickets %}
+                                        {% for ticket in tickets %}
+                                        <tr>
+                                            <td class="ps-3 font-monospace text-primary fw-bold">TK-10{{ ticket.id }}</td>
+                                            <td>
+                                                <div class="text-white fw-bold">{{ ticket.title }}</div>
+                                                <small class="text-custom-muted">{{ ticket.description[:60] }}...</small>
+                                            </td>
+                                            <td><span class="badge bg-dark border border-secondary text-light">{{ ticket.category }}</span></td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if ticket.priority == 'Critical' %}badge-urgent bg-danger
+                                                    {% elif ticket.priority == 'High' %}badge-high bg-warning text-dark
+                                                    {% elif ticket.priority == 'Medium' %}badge-medium bg-info text-dark
+                                                    {% else %}badge-low bg-secondary{% endif %}">
+                                                    {{ ticket.priority | upper }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge {% if ticket.status == 'Resolved' %}bg-success{% else %}bg-primary{% endif %}">
+                                                    {{ ticket.status | upper }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-3">
+                                                <button class="btn btn-outline-info btn-sm px-2 py-1 me-1" type="button" data-bs-toggle="collapse" data-bs-target="#thread-{{ ticket.id }}">
+                                                    <i class="fa-solid fa-comments"></i> Thread ({{ ticket.comments | length }})
+                                                </button>
+                                                {% if role == 'admin' %}
+                                                    <a href="{{ url_for('resolve_ticket', ticket_id=ticket.id) }}" class="btn btn-success btn-sm px-2 py-1"><i class="fa-solid fa-check"></i> Resolve</a>
+                                                    <a href="{{ url_for('delete_ticket', ticket_id=ticket.id) }}" class="btn btn-danger btn-sm px-2 py-1" onclick="return confirm('Delete this incident?');"><i class="fa-solid fa-trash"></i></a>
+                                                {% else %}
+                                                    <span class="text-custom-muted small fst-italic">Employee View (Locked)</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+
+                                        <!-- RESOLUTION & COMMENTS THREAD -->
+                                        <tr class="collapse border-bottom border-secondary" id="thread-{{ ticket.id }}">
+                                            <td colspan="6" class="p-3 bg-dark">
+                                                <div class="p-3 border border-secondary rounded" style="background-color: #161b22;">
+                                                    <h6 class="fw-bold text-light mb-3"><i class="fa-solid fa-comments me-2 text-primary"></i> Resolution & Discussion Thread</h6>
+                                                    
+                                                    <!-- COMMENT LIST -->
+                                                    <div class="mb-3">
+                                                        {% for c in ticket.comments %}
+                                                        <div class="comment-box">
+                                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                <strong class="{% if c.role == 'admin' %}text-warning{% elif c.role == 'system' %}text-info{% else %}text-primary{% endif %}">
+                                                                    {{ c.author }}
+                                                                </strong>
+                                                                <span class="badge bg-secondary font-monospace" style="font-size: 0.65rem;">{{ c.role | upper }}</span>
+                                                            </div>
+                                                            <div class="text-light small">{{ c.text }}</div>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+
+                                                    <!-- POST NEW COMMENT FORM -->
+                                                    <form action="{{ url_for('add_comment', ticket_id=ticket.id) }}" method="POST">
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="text" name="comment" class="form-control" placeholder="Write a response or updates on this ticket..." required>
+                                                            <button class="btn btn-primary fw-bold" type="submit"><i class="fa-solid fa-reply me-1"></i> Post Comment</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-custom-muted py-4">No active tickets found in queue. All systems normal!</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN MODAL -->
+    <div class="modal fade" id="adminModal" tabindex="-1" aria-labelledby="adminModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: #161b22; color: #c9d1d9; border: 1px solid #30363d;">
+                <form action="{{ url_for('switch_role') }}" method="POST">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title" id="adminModalLabel"><i class="fa-solid fa-lock text-warning me-2"></i> IT Agent Authentication</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="target_role" value="admin">
+                        <p class="small text-custom-muted">Enter the admin/technician password to access the IT Agent Dashboard controls.</p>
+                        <div class="mb-3">
+                            <label for="password" class="form-label text-light">Password:</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Authenticate & Access</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
